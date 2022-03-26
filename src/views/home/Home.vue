@@ -57,7 +57,7 @@ const isDraw = ref(false)
 const beginX = ref(0)
 const beginY = ref(0)
 const color = ref('')
-const imageData = ref<ImageData | null>()
+const currentImageData = ref<ImageData | null>()
 const executionArray = ref<ImageData[]>([])
 
 const type = ref<DrawingType>('common')
@@ -71,8 +71,8 @@ const canvasDown = (e: MouseEvent) => {
   beginY.value = e.pageY - canvasEl.value!.offsetTop
   ctx.value?.beginPath() // 起始一条路径
   ctx.value?.moveTo(beginX.value, beginY.value) // 把路径移动到画布中的指定点，不创建线条
-  if (imageData.value) {
-    executionArray.value.push(imageData.value) // 记录上一次数据
+  if (currentImageData.value) {
+    executionArray.value.push(currentImageData.value) // 记录上一次数据
   }
 }
 
@@ -98,7 +98,7 @@ const canvasMove = (e: MouseEvent) => {
 
 const canvasUp = () => {
   if (isDraw.value) {
-    imageData.value = ctx.value!.getImageData(
+    currentImageData.value = ctx.value!.getImageData(
       0,
       0,
       canvasWidth.value,
@@ -120,9 +120,9 @@ const commonFn: DrawingFnType = (ctx, x, y) => {
 }
 
 const arcFn: DrawingFnType = (ctx, x, y) => {
-  imageData.value &&
+  executionArray.value[executionArray.value.length - 1] &&
     ctx!.putImageData(
-      imageData.value,
+      executionArray.value[executionArray.value.length - 1],
       0,
       0,
       0,
@@ -146,9 +146,9 @@ const arcFn: DrawingFnType = (ctx, x, y) => {
 }
 
 const rectFn: DrawingFnType = (ctx, x, y) => {
-  imageData.value &&
+  executionArray.value[executionArray.value.length - 1] &&
     ctx!.putImageData(
-      imageData.value,
+      executionArray.value[executionArray.value.length - 1],
       0,
       0,
       0,
@@ -173,7 +173,7 @@ const saveImg = () => {
 }
 
 const clear = () => {
-  imageData.value = ctx.value?.createImageData(
+  currentImageData.value = ctx.value?.createImageData(
     canvasWidth.value,
     canvasHeight.value
   )
@@ -184,10 +184,10 @@ const clear = () => {
 const undo = () => {
   createNewImageData()
   if (executionArray.value.length === 0) return
-  const lastImageData = executionArray.value.pop()
+  currentImageData.value = executionArray.value.pop()
 
   ctx.value!.putImageData(
-    lastImageData!,
+    currentImageData.value!,
     0,
     0,
     0,
@@ -199,7 +199,7 @@ const undo = () => {
 
 const createNewImageData = () => {
   // 创建新的、空白的ImageData对象
-  imageData.value = ctx.value!.createImageData(
+  currentImageData.value = ctx.value!.createImageData(
     canvasWidth.value,
     canvasHeight.value
   )
